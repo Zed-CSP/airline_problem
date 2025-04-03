@@ -1,36 +1,85 @@
-# Airline Ticket Pricing Problem
+# Airline Ticket Pricing Optimization
 
-This project implements a solution for Aviato.com's airline ticket pricing problem. The goal is to maximize revenue by dynamically pricing airline tickets based on various factors.
+This project implements a dynamic pricing system for airline tickets, with a focus on business class pricing optimization.
 
-## Problem Description
+## Project Structure
 
-For each flight, a pricing function is run once per simulated day to set that day's ticket price. The function must consider:
-- Number of days until the flight
-- Number of seats remaining
-- Current demand level (known for current day, uniform distribution 100-200 for future days)
-
-The quantity of tickets sold follows the formula:
 ```
-quantity_sold = min(demand_level - price, remaining_seats)
+airline_pricing/
+├── src/
+│   ├── models/
+│   │   └── pricing_model.py    # Pricing algorithm implementation
+│   ├── simulation/
+│   │   └── simulator.py        # Simulation environment
+│   └── utils/
+│       └── data_loader.py      # Data loading utilities
+├── data/
+│   └── synthetic/             # Synthetic data directory
+├── tests/                     # Test directory
+├── main.py                    # Main script
+└── requirements.txt           # Dependencies
 ```
 
-## Solution Components
+## Features
 
-1. `pricing_function.py`: Contains the main pricing algorithm
-2. `simulator.py`: Simulates the ticket sales environment
-3. `analysis.py`: Tools for analyzing the performance of different pricing strategies
+- Dynamic pricing based on:
+  - Current demand level
+  - Remaining inventory
+  - Time until departure
+  - Historical data
+- Business class specific optimizations
+- Comparison with historical pricing
+- Detailed performance analytics
+
+## Installation
+
+1. Create a virtual environment (optional but recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 ## Usage
 
-Run the simulator to test the pricing strategy:
+Run the simulation:
 ```bash
-python simulator.py
+python main.py
 ```
 
-## Implementation Details
+The simulator will:
+1. Load synthetic data
+2. Run pricing simulations for multiple flights
+3. Compare results with historical data
+4. Display detailed statistics
 
-The pricing function uses a dynamic programming approach to optimize revenue by:
-1. Considering the current demand level
-2. Estimating future demand based on the uniform distribution
-3. Balancing immediate revenue with future opportunities
-4. Adjusting prices based on remaining inventory and time until departure
+## Pricing Model
+
+The pricing model considers multiple factors:
+- Base price for business class
+- Demand elasticity
+- Inventory pressure
+- Time pressure
+- Special case adjustments (high demand, last-minute, etc.)
+
+## Data
+
+The system uses synthetic data from `assets/SynthData/large_airline_pricing_simulation.csv` with the following structure:
+- Flight ID: Unique flight identifier
+- Days Before Departure: Number of days until the flight
+- Class: Ticket class (Business/Economy)
+- Price: Historical price
+- Demand: Demand level for that day
+
+## Performance Metrics
+
+The system tracks:
+- Total revenue
+- Average price
+- Load factor
+- Demand patterns
+- Historical price comparison

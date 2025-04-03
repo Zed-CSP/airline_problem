@@ -2,7 +2,8 @@ import numpy as np
 
 def pricing_function(days_left, tickets_left, demand_level):
     """
-    Optimize ticket pricing to maximize expected revenue.
+    Optimize ticket pricing to maximize expected revenue with dynamic seat-based pricing.
+    Adjusted for business class pricing with higher price points and lower demand levels.
     
     Args:
         days_left (int): Number of days until the flight
@@ -12,43 +13,53 @@ def pricing_function(days_left, tickets_left, demand_level):
     Returns:
         float: Optimal ticket price
     """
-    if days_left == 0 or tickets_left == 0:
+    if tickets_left <= 0:  # Only return 0 if no tickets left
         return 0
     
-    # For the current day, we know the exact demand level
-    if days_left == 1:
-        # On the last day, we want to maximize revenue given current demand
-        optimal_price = demand_level / 2
-        return min(optimal_price, demand_level - 1)  # Ensure at least 1 ticket can be sold
+    # Base price calculation (adjusted for business class scale)
+    base_price = 900  # Starting base price for business class
     
-    # For future days, we need to consider the uniform distribution of demand
-    # Expected future demand is 150 (average of uniform distribution 100-200)
-    #
-    # ********* This would be a good place to use a more sophisticated model for future demand *********
-    expected_future_demand = 150
+    # Demand factor (adjusted for actual demand numbers from data)
+    demand_factor = 1 + max(0, (demand_level - 25) / 25)
     
-    # Calculate optimal price considering both current and future demand
-    # We use a weighted approach based on days left
-    current_weight = 1.0
-    future_weight = (days_left - 1) * 0.5  # Future days have less weight
+    # Inventory pressure factor
+    total_seats = 50  # Assuming business class has fewer seats
+    inventory_factor = 1 + max(0, (1 - tickets_left/total_seats)) * 0.3
     
-    # Optimal price considering both current and future demand
-    optimal_price = (
-        (current_weight * demand_level + future_weight * expected_future_demand) /
-        (current_weight + future_weight)
-    ) / 2
+    # Time pressure factor
+    time_factor = 1 + max(0, (1 - days_left/30)) * 0.2
     
-    # Adjust price based on remaining inventory
-    if tickets_left < (demand_level - optimal_price):
-        # If we have limited inventory, increase price
-        optimal_price = demand_level - tickets_left
+    # Calculate optimal price
+    optimal_price = base_price * demand_factor * inventory_factor * time_factor
     
-    # Ensure price is at least 1 and at most demand_level - 1
-    optimal_price = max(1, min(optimal_price, demand_level - 1))
+    # Adjust price based on demand level
+    if demand_level > 30:
+        optimal_price *= 1.1  # 10% premium for high demand
+    elif demand_level < 20:
+        optimal_price *= 0.95  # 5% discount for low demand
+    
+    # Last minute pricing
+    if days_left <= 3:
+        if tickets_left > 20:  # Many seats left
+            optimal_price *= 0.9  # 10% discount
+        else:
+            optimal_price *= 1.1  # 10% premium
+    
+    # Ensure price stays within reasonable bounds for business class
+    optimal_price = max(800, min(optimal_price, 1200))
     
     return optimal_price
 
 def calculate_expected_revenue(price, demand_level, tickets_left):
-    """Calculate expected revenue for a given price and demand level."""
-    quantity = min(demand_level - price, tickets_left)
+    """
+    Calculate expected revenue for a given price and demand level.
+    For business class, assume demand is less elastic (less sensitive to price).
+    """
+    # Calculate actual demand based on price elasticity
+    price_elasticity = 0.5  # Business class is less elastic
+    actual_demand = demand_level * (1 - price_elasticity * (price - 900) / 900)
+    actual_demand = max(0, min(actual_demand, demand_level))
+    
+    # Calculate quantity sold
+    quantity = min(actual_demand, tickets_left)
     return price * quantity 
